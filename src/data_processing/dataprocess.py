@@ -112,7 +112,7 @@ def school_process(school_data, zip_data):
 		'State government'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input']
+	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
 	
@@ -140,6 +140,7 @@ def school_process(school_data, zip_data):
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
 	output = joined['District_Progress and Performance Index (PPI) - All Students']
+	print (full_x.mean(axis=0))
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,
