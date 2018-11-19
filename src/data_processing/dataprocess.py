@@ -9,7 +9,6 @@ import string, csv, json, fileinput
 # gucci imports
 import numpy as np
 import pandas as pd
-import sklearn as skl
 
 # misc
 import progressbar
@@ -23,6 +22,11 @@ def main():
 	scraped_data = load_csv('../../scraper/econ_full_scrape_11-17-2018.csv')
 	school_process(school_data, scraped_data)
 	## want a dictionary of index to school code
+
+def grab_data():
+	school_data = load_csv('../../data/massachusetts-public-schools-data/MA_Public_Schools_2017.csv')
+	scraped_data = load_csv('../../scraper/econ_full_scrape_11-17-2018.csv')
+	return school_process(school_data, scraped_data)
 
 def load_csv(filename):
 	df = pd.read_csv(filename, sep =',')
@@ -40,9 +44,8 @@ def school_process(school_data, zip_data):
 						'State', 
 						'Zip', 
 						'District Name',
-						'District Code',
-						'School Type'],
-		'endogeneous_input': [
+						'District Code'],
+		'enrollment_by_grade': [
 			'PK_Enrollment',
 			'K_Enrollment',
 			'1_Enrollment',
@@ -58,6 +61,8 @@ def school_process(school_data, zip_data):
 			'11_Enrollment',
 			'12_Enrollment',
 			'SP_Enrollment',
+		],
+		'endogeneous_input': [
 			'% First Language Not English',
 			'% English Language Learner',
 			'% Students With Disabilities',
@@ -105,26 +110,23 @@ def school_process(school_data, zip_data):
 		'Families with No One Working',
 		'Avg Commute Time',
 		'Self Employment Income',
-		'Total Self-employed Men',
-		'Total Self-employed Women',
 		'Less Than Highschool in Poverty',
 		'Local government',
 		'State government'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
+	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
-	
+	school_data = school_data.dropna()
 	## Create Dummy Variables for School Type ##
-	one_hot_type = pd.get_dummies(school_data['School Type'])
-	school_data = school_data.join(one_hot_type)
-	school_data.drop('School Type', axis=1, inplace=True)
+	# one_hot_type = pd.get_dummies(school_data['School Type'])
+	# school_data = school_data.join(one_hot_type)
+	# school_data.drop('School Type', axis=1, inplace=True)
 	#### Output Join Here ####
 
 	zip_data = zip_data[zip_categories + ['Place']]
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
-	
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
 	
@@ -137,10 +139,11 @@ def school_process(school_data, zip_data):
 	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
 	
 	## Filter the input and output columns
-	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories + ['Public School', 'Charter School']
+	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories # + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
+
 	output = joined['District_Progress and Performance Index (PPI) - All Students']
-	print (full_x.mean(axis=0))
+
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,
