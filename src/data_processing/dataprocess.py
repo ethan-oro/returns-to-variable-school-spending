@@ -111,6 +111,20 @@ def school_process(school_data, zip_data):
 		'Local government',
 		'State government'
 	]
+	aux_morn = [
+		'12am to 5am',
+		'5am to 530am', 
+		'530 am to 6am',
+		'6am to 630am',
+		'630 am to 7am',
+		'7am to 730am',
+		'730 am to 8am'
+	]
+	aux_eve = [
+		'11am to 12noon',
+		'12noon to 4pm',
+		'4pm to midnight'
+	]
 
 	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
 	school_data = school_data[school_cols]
@@ -122,7 +136,9 @@ def school_process(school_data, zip_data):
 	school_data.drop('School Type', axis=1, inplace=True)
 	#### Output Join Here ####
 
-	zip_data = zip_data[zip_categories + ['Place']]
+	zip_data['absent_morning'] = sum([zip_data[aux] for aux in aux_morn])
+	zip_data['absent_evening'] = sum([zip_data[aux] for aux in aux_eve])
+	zip_data = zip_data[zip_categories + ['Place', 'absent_morning', 'absent_evening']]
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
 	
 	## Join the zip code data with the school data ##
