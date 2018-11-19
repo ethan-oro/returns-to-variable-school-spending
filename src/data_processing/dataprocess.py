@@ -145,7 +145,7 @@ def school_process(school_data, zip_data):
 	zip_data['absent_morning'] = sum([zip_data[aux] for aux in aux_morn])
 	zip_data['absent_evening'] = sum([zip_data[aux] for aux in aux_eve])
 	zip_data = zip_data[zip_categories + ['Place', 'absent_morning', 'absent_evening']]
-	zip_data = zip_data[zip_categories + ['Place']]
+
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
