@@ -40,9 +40,9 @@ def school_process(school_data, zip_data):
 						'State', 
 						'Zip', 
 						'District Name',
-						'District Code'],
+						'District Code',
+						'School Type'],
 		'endogeneous_input': [
-			'School Type',
 			'PK_Enrollment',
 			'K_Enrollment',
 			'1_Enrollment',
@@ -105,7 +105,6 @@ def school_process(school_data, zip_data):
 		'Self Employment Income',
 		'Total Self-employed Men',
 		'Total Self-employed Women',
-		'Zip Code',
 		'Less Than Highschool in Poverty',
 		'Local government',
 		'State government'
@@ -113,21 +112,36 @@ def school_process(school_data, zip_data):
 
 	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input']
 	school_data = school_data[school_cols]
+	school_data = school_data.rename(columns={'Zip':'Zip Code'})
+	
+	## Create Dummy Variables for School Type ##
 	one_hot_type = pd.get_dummies(school_data['School Type'])
 	school_data = school_data.join(one_hot_type)
 	school_data.drop('School Type', axis=1, inplace=True)
-	school_data = school_data.rename(columns={'Zip':'Zip Code'})
-	zip_data = zip_data[zip_categories]
+	#### Output Join Here ####
 
-	joined_input = school_data.join(zip_data, on='Zip Code', how='left', rsuffix='_scrape')
-	output = None ####### @zane fill this in with your metric(s)-- indices should align with joined_input
+	zip_data = zip_data[zip_categories + ['Place']]
+	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
+	
+	## Join the zip code data with the school data ##
+	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
+	
+	## Normalization of numeric columns -- future work?##
 
-	highschools = joined_input['12_Enrollment'] > 0
-	middleschools = (not highschools) and joined_input['7_Enrollment'] > 0
-	elementaryschools = (not highschools) and (not middleschools)
+	
 
-	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories
-	full_x = joined_input[x_cols]
+
+
+	## Filter by school type -- bugs ##
+	highschools = joined['12_Enrollment'] > 0
+	middleschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] > 0)
+	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
+	print(len(highschools), np.sum(highschools), np.sum(middleschools), np.sum(elementaryschools))
+	print(joined[highschools][school_categories['endogeneous_input']].head(5))
+	## Filter the input and output columns
+	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories + ['Public School', 'Charter School']
+	full_x = joined[x_cols]
+	output = None
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,
