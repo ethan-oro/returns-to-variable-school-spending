@@ -26,7 +26,7 @@ def main():
 
 def load_csv(filename):
 	df = pd.read_csv(filename, sep =',')
-	return df 
+	return df
 
 def school_process(school_data, zip_data):
 	'''
@@ -34,11 +34,11 @@ def school_process(school_data, zip_data):
 
 	'''
 	school_categories = {
-		'descriptive': ['School Code', 
-						'School Name', 
-						'Town', 
-						'State', 
-						'Zip', 
+		'descriptive': ['School Code',
+						'School Name',
+						'Town',
+						'State',
+						'Zip',
 						'District Name',
 						'District Code',
 						'School Type'],
@@ -115,7 +115,7 @@ def school_process(school_data, zip_data):
 	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
-	
+
 	## Create Dummy Variables for School Type ##
 	one_hot_type = pd.get_dummies(school_data['School Type'])
 	school_data = school_data.join(one_hot_type)
@@ -124,18 +124,18 @@ def school_process(school_data, zip_data):
 
 	zip_data = zip_data[zip_categories + ['Place']]
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
-	
+
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
-	
+
 	## Normalization of numeric columns -- future work?##
 
-	
+
 	## Filter by school type -- bugs ##
 	highschools = joined['12_Enrollment'] > 0
 	middleschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] > 0)
 	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
-	
+
 	## Filter the input and output columns
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
@@ -153,8 +153,8 @@ def school_process(school_data, zip_data):
 	}
 
 	return data_dict
-	
-	
+
+
 
 
 
