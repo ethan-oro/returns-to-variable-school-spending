@@ -10,6 +10,7 @@ import string, csv, json, fileinput
 import numpy as np
 import pandas as pd
 import sklearn as skl
+import matplotlib.pyplot as plt
 
 # misc
 import progressbar
@@ -87,8 +88,7 @@ def school_process(school_data, zip_data):
 			'Total Pupil FTEs',
 			'Average Expenditures per Pupil'
 		],
-		'output_markers': [
-			'District_Progress and Performance Index (PPI) - All Students']
+		'output_markers': []
 	}
 
 	zip_categories = [
@@ -121,24 +121,18 @@ def school_process(school_data, zip_data):
 	zip_data = zip_data[zip_categories]
 
 	joined_input = school_data.join(zip_data, on='Zip Code', how='left', rsuffix='_scrape')
-	output = school_data['District_Progress and Performance Index (PPI) - All Students']
+
+	input = 'Average Expenditures per Pupil' ####### @zane fill this in with your metric(s)-- indices should align with joined_input
 
 	highschools = joined_input['12_Enrollment'] > 0
-	middleschools = (not highschools) and joined_input['7_Enrollment'] > 0
-	elementaryschools = (not highschools) and (not middleschools)
 
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories
-	full_x = joined_input[x_cols]
+	full_y = high_schools[x_cols]
 	data_dict = {
-		'full_x': full_x,
-		'full_y': output,
-		'highschool_x': full_x[highschools],
-		'highschool_y': output[highschools],
-		'middleschool_x': full_x[middleschools],
-		'middleschool_y': output[middleschools],
-		'elementary_x': full_x[elementaryschools],
-		'elementary_y': output[elementaryschools]
+		'full_x': input,
+		'full_y': full_y
 	}
+	
 
 	return data_dict
 	
