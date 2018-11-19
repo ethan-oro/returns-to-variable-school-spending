@@ -3,11 +3,49 @@ sys.path.append('./../data_processing/')
 from dataprocess import *
 from sklearn import linear_model
 from sklearn import svm 
-
+NUM_TRIALS = 100
 
 def main():
-	model = Model()
-	model.train()
+	print('-- PART I --')
+	data_first = grab_data_spend()
+	for key in data_first['full_y'].keys():
+		print(key)
+		spend_model = Model(type="linear_regression", regularization = False)
+
+		data_first = grab_data_spend()
+		data_new = data_first
+		data_new['full_y'] = data_first['full_y'][key]
+
+		avg_score_train, avg_score_test = multiple_splits(spend_model, data_new)
+		print('Average Training Score: ' + str(avg_score_train))
+		print('Average Testng Score: ' + str(avg_score_test))
+
+
+	perform_model = Model(type="linear_regression", regularization = True)
+	data_second = grab_data()
+
+	avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+	print('-- PART II --')
+	print('Average Training Score: ' + str(avg_score_train))
+	print('Average Testng Score: ' + str(avg_score_test))
+
+
+
+def multiple_splits(model, data, noisy = False):
+	sum_score_train = 0
+	sum_score_test = 0
+	for i in range(NUM_TRIALS):
+		score_train, score_test = model.train(data)
+		sum_score_train += score_train
+		sum_score_test += score_test
+		if noisy:
+			print('---')
+			print(score_train)
+			print(score_test)
+	avg_score_train = sum_score_train / NUM_TRIALS
+	avg_score_test = sum_score_test / NUM_TRIALS
+
+	return avg_score_train, avg_score_test
 
 class Model(object):
 	def __init__(self, type = "linear_regression", regularization = False):
@@ -55,21 +93,22 @@ class Model(object):
 
 		return (x_train, y_train, x_test, y_test)
 
-	def train(self, data_key = 'highschool'):
+	def train(self, data, data_key = 'highschool', noisy = False):
 		# data_key is one of 'full', 'highschool', 'middleschool', 'elementary'
-		data = grab_data()
-
 		data_x = data['%s_x'%data_key]
 		data_y = data['%s_y'%data_key]
 		self.x_train, self.y_train, self.x_test, self.y_test = self._transform_data(data_x, data_y)
 		self.model.fit(self.x_train, self.y_train)
-		print(self.model.predict(self.x_test))
-		print('--')
-		print(self.y_test)
-		print('--')
-		print(self.model.predict(self.x_test) - self.y_test)
-		print(self.model.score(self.x_train, self.y_train))
-		print(self.model.score(self.x_test, self.y_test))
+		if noisy:
+			print(self.model.predict(self.x_test))
+			print('--')
+			print(self.y_test)
+			print('--')
+			print(self.model.predict(self.x_test) - self.y_test)
+		score_train = self.model.score(self.x_train, self.y_train)
+		score_test = self.model.score(self.x_test, self.y_test)
+
+		return score_train, score_test
 
 
 
