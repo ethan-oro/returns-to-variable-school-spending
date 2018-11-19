@@ -10,6 +10,7 @@ import string, csv, json, fileinput
 import numpy as np
 import pandas as pd
 import sklearn as skl
+import matplotlib.pyplot as plt
 
 # misc
 import progressbar
@@ -40,9 +41,9 @@ def school_process(school_data, zip_data):
 						'State', 
 						'Zip', 
 						'District Name',
-						'District Code',
-						'School Type'],
+						'District Code'],
 		'endogeneous_input': [
+			'School Type',
 			'PK_Enrollment',
 			'K_Enrollment',
 			'1_Enrollment',
@@ -87,9 +88,7 @@ def school_process(school_data, zip_data):
 			'Total Pupil FTEs',
 			'Average Expenditures per Pupil'
 		],
-		'output_markers': [
-			'District_Progress and Performance Index (PPI) - All Students'
-		]
+		'output_markers': []
 	}
 
 	zip_categories = [
@@ -107,6 +106,7 @@ def school_process(school_data, zip_data):
 		'Self Employment Income',
 		'Total Self-employed Men',
 		'Total Self-employed Women',
+		'Zip Code',
 		'Less Than Highschool in Poverty',
 		'Local government',
 		'State government'
@@ -114,42 +114,25 @@ def school_process(school_data, zip_data):
 
 	school_cols = school_categories['descriptive'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input']
 	school_data = school_data[school_cols]
-	school_data = school_data.rename(columns={'Zip':'Zip Code'})
-	
-	## Create Dummy Variables for School Type ##
 	one_hot_type = pd.get_dummies(school_data['School Type'])
 	school_data = school_data.join(one_hot_type)
 	school_data.drop('School Type', axis=1, inplace=True)
-	#### Output Join Here ####
+	school_data = school_data.rename(columns={'Zip':'Zip Code'})
+	zip_data = zip_data[zip_categories]
 
-	zip_data = zip_data[zip_categories + ['Place']]
-	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
-	
-	## Join the zip code data with the school data ##
-	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
-	
-	## Normalization of numeric columns -- future work?##
+	joined_input = school_data.join(zip_data, on='Zip Code', how='left', rsuffix='_scrape')
 
-	
-	## Filter by school type -- bugs ##
-	highschools = joined['12_Enrollment'] > 0
-	middleschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] > 0)
-	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
-	
-	## Filter the input and output columns
-	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories + ['Public School', 'Charter School']
-	full_x = joined[x_cols]
-	output = joined['District_Progress and Performance Index (PPI) - All Students']
+	input = 'Average Expenditures per Pupil' ####### @zane fill this in with your metric(s)-- indices should align with joined_input
+
+	highschools = joined_input['12_Enrollment'] > 0
+
+	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories
+	full_y = high_schools[x_cols]
 	data_dict = {
-		'full_x': full_x,
-		'full_y': output,
-		'highschool_x': full_x[highschools],
-		'highschool_y': output[highschools],
-		'middleschool_x': full_x[middleschools],
-		'middleschool_y': output[middleschools],
-		'elementary_x': full_x[elementaryschools],
-		'elementary_y': output[elementaryschools]
+		'full_x': input,
+		'full_y': full_y
 	}
+	
 
 	return data_dict
 	
