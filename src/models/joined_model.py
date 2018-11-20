@@ -8,7 +8,10 @@ NUM_TRIALS = 100
 def main():
 	data = grab_data_full()
 	joint_model = JoinedModel(len(data['intermediate'].keys()), regularization2 = True)
-	joint_model.train(data)
+	avg1, avg2 = multiple_splits(joint_model, data)
+	print('xxxx')
+	print(avg1)
+	print(avg2)
 
 def multiple_splits(model, data, noisy = False):
 	sum_score_train = 0
@@ -46,9 +49,6 @@ class JoinedModel(object):
 
 	def _transform_data(self, dataframe_x, dataframe_intermediate, dataframe_y, train_split = 0.8):
 		m,n = dataframe_x.shape
-		print(dataframe_x)
-		print(dataframe_y)
-		print(dataframe_intermediate)
 
 		x = np.array(dataframe_x)
 		y = np.array(dataframe_y)
@@ -103,7 +103,8 @@ class JoinedModel(object):
 		self.model2.fit(np.concatenate((self.always_x_train, self.intermediate_train), axis = 1), self.y_train)
 		print("second part: ")
 		print(self.model2.score(np.concatenate((self.always_x_train, self.intermediate_train), axis = 1), self.y_train))
-		print(self.model2.score(np.concatenate((self.always_x_train, train_intermediate.T), axis = 1), self.y_train))
+		score1 = self.model2.score(np.concatenate((self.always_x_train, train_intermediate.T), axis = 1), self.y_train)
+		print(score1)
 
 
 		test_intermediate_predictions = []
@@ -117,7 +118,10 @@ class JoinedModel(object):
 		test_intermediate = np.array(test_intermediate_predictions)
 		print("second part: ")
 		print(self.model2.score(np.concatenate((self.always_x_test, self.intermediate_test), axis = 1), self.y_test))
-		print(self.model2.score(np.concatenate((self.always_x_test, test_intermediate.T), axis = 1), self.y_test))
+		score2 = self.model2.score(np.concatenate((self.always_x_test, test_intermediate.T), axis = 1), self.y_test)
+		print(score2)
+
+		return score1, score2
 
 
 
