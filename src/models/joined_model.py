@@ -79,6 +79,16 @@ class JoinedModel(object):
 		x_train[bad_inds_train] = np.take(means, bad_inds_train[1])
 		x_test[bad_inds_test] = np.take(means, bad_inds_test[1])
 
+		means = np.nanmean(z_train, axis=0)
+		z_train = np.nan_to_num(z_train)
+		z_test = np.nan_to_num(z_test)
+
+		bad_inds_train = np.where(z_train == 0)
+		bad_inds_test = np.where(z_test == 0)
+
+		z_train[bad_inds_train] = np.take(means, bad_inds_train[1])
+		z_test[bad_inds_test] = np.take(means, bad_inds_test[1])
+
 		return (x_train, z_train, y_train, x_test, z_test, y_test)
 
 	def train(self, data, data_key = 'highschool', noisy = False):
