@@ -10,7 +10,7 @@ def main():
 	data_first = grab_data_spend()
 	for key in data_first['full_y'].keys():
 		print(key)
-		spend_model = Model(type="linear_regression", regularization = False)
+		spend_model = Model(type="linear_regression", regularization = True)
 
 		data_first = grab_data_spend()
 		data_new = data_first
@@ -21,7 +21,7 @@ def main():
 		print('Average Testng Score: ' + str(avg_score_test))
 
 
-	perform_model = Model(type="linear_regression", regularization = True)
+	perform_model = Model(type="linear_regression", regularization = False)
 	data_second = grab_data()
 
 	avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
@@ -53,7 +53,7 @@ class Model(object):
 			if regularization:
 				self.model = linear_model.Ridge()
 			else:
-				self.model = linear_model.LinearRegression(normalize=True)
+				self.model = linear_model.LinearRegression(normalize=False)
 		elif type == "SVM":
 			self.model = svm.SVR()
 
@@ -109,6 +109,12 @@ class Model(object):
 		score_test = self.model.score(self.x_test, self.y_test)
 
 		return score_train, score_test
+
+	def predict(self, data, data_key = 'highschool', noisy = False):
+		data_x = data['%s_x'%data_key]
+		data_y = data['%s_y'%data_key]
+		x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
+		return self.model.predict(x_test)
 
 
 
