@@ -53,7 +53,7 @@ def plot3(inputs, axis_names, targets, plot_title = 'title'):
 
 	fig = plt.figure()
 	ax = fig.add_subplot(111, projection='3d')
-	cb = ax.scatter(inputs[axis_names[0]], inputs[axis_names[1]], inputs[axis_names[2]],c=targets,cmap=plt.cm.get_cmap('RdBu'))
+	cb = ax.scatter(inputs[axis_names[0]], inputs[axis_names[1]], inputs[axis_names[2]],c=targets,cmap=plt.cm.get_cmap('rainbow'))
 	ax.set_xlabel(axis_names[0])
 	ax.set_ylabel(axis_names[1])
 	ax.set_zlabel(axis_names[2])

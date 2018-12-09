@@ -430,7 +430,9 @@ def full_process(school_data, zip_data):
 			'Total Pupil FTEs'
 		],
 		'output_markers': [
-			'District_Progress and Performance Index (PPI) - All Students'
+			# 'District_Progress and Performance Index (PPI) - All Students'
+			'% Graduated'
+			# '% Attending College'
 		]
 	}
 
@@ -503,7 +505,7 @@ def full_process(school_data, zip_data):
 	intermediate_cols  = school_categories['intermediate']
 	intermediate = joined[intermediate_cols]
 
-	second_output = joined['District_Progress and Performance Index (PPI) - All Students']
+	second_output = joined['% Graduated']
 
 	data_dict = {
 		'always_x': always_x,
