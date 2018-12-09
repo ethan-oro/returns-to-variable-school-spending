@@ -90,6 +90,10 @@ def school_process(school_data, zip_data):
 			'Number of Students'
 		],
 		'exogeneous_input': [
+			'Total Expenditures',
+			'Average Expenditures per Pupil'
+		],
+		'exogeneous_input1': [
 			'Total # of Classes',
 			'Average Class Size',
 			'Salary Totals',
@@ -137,7 +141,7 @@ def school_process(school_data, zip_data):
 		'4pm to midnight'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
+	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input'] 
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
 	school_data = school_data.dropna()
