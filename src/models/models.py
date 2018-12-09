@@ -262,6 +262,12 @@ class Model(object):
 
         return score_train, score_test
 
+	def predict(self, data, data_key = 'highschool', noisy = False):
+		data_x = data['%s_x'%data_key]
+		data_y = data['%s_y'%data_key]
+		x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
+		return self.model.predict(x_test)
+
 
 
 
