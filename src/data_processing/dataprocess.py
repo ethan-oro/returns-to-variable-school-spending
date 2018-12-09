@@ -9,6 +9,7 @@ import string, csv, json, fileinput
 # gucci imports
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 # misc
 import progressbar
@@ -38,9 +39,44 @@ def grab_data_full():
 	scraped_data = load_csv('../../scraper/econ_full_scrape_11-17-2018.csv')
 	return full_process(school_data, scraped_data)
 
+def transform_data(dataframe_x, dataframe_y, train_split = 0.8, standardize = True):
+	m,n = dataframe_x.shape
+
+	x = np.array(dataframe_x)
+	y = np.array(dataframe_y)
+	random_state = np.random.get_state()
+	np.random.shuffle(x)
+	np.random.set_state(random_state)
+	np.random.shuffle(y)
+	split_ind = int(train_split*m)
+	x_train = x[:split_ind,:]
+	y_train = y[:split_ind]
+	x_test = x[split_ind:,:]
+	y_test = y[split_ind:]
+
+	means = np.nanmean(x_train, axis=0)
+	x_train = np.nan_to_num(x_train)
+	x_test = np.nan_to_num(x_test)
+
+	bad_inds_train = np.where(x_train == 0)
+	bad_inds_test = np.where(x_test == 0)
+
+	x_train[bad_inds_train] = np.take(means, bad_inds_train[1])
+	x_test[bad_inds_test] = np.take(means, bad_inds_test[1])
+
+	if standardize:
+		normalizer = StandardScaler()
+		x_train = normalizer.fit_transform(x_train)
+		if train_split < 1.0:
+			x_test = normalizer.transform(x_test)
+
+
+	return (x_train, y_train, x_test, y_test)
 def load_csv(filename):
 	df = pd.read_csv(filename, sep =',')
 	return df 
+
+
 
 def school_process(school_data, zip_data):
 	'''
