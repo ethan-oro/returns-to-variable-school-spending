@@ -7,6 +7,7 @@ from sklearn import linear_model
 from sklearn import svm
 from sklearn import ensemble
 from sklearn import discriminant_analysis
+import matplotlib.pyplot as plt
 NUM_TRIALS = 100
 
 def main():
@@ -24,16 +25,15 @@ def main():
     #     print('Average Training Score: ' + str(avg_score_train))
     #     print('Average Testng Score: ' + str(avg_score_test))
 
-    perform_model = Model(type='full')
-    data_second = grab_data()
-    avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-    print('-- RESULTS --')
-    print('Average Training Score: ' + str(avg_score_train))
-    print('Average Testng Score: ' + str(avg_score_test))
+    # perform_model = Model(type='full')
+    # data_second = grab_data()
+    # avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+    # print('-- RESULTS --')
+    # print('Average Training Score: ' + str(avg_score_train))
+    # print('Average Testng Score: ' + str(avg_score_test))
 
-    return
 
-    model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor']
+    model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging']
 
     n_estimators=100
     subsample=1.0
@@ -44,11 +44,41 @@ def main():
         data_second = grab_data()
         avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
         results[model] = (avg_score_train, avg_score_test)
-    for name, results in results.items():
+    for name, result in results.items():
         print('-- ', name ,' --')
-        print('Average Training Score: ' + str(results[0]))
-        print('Average Testng Score: ' + str(results[1]))
+        print('Average Training Score: ' + str(result[0]))
+        print('Average Testng Score: ' + str(result[1]))
 
+
+    N = len(model_list)
+
+    train = []
+    test = []
+
+    for name, result in results.items():
+        train.append(result[0])
+        test.append(result[1])
+
+    fig, ax = plt.subplots()
+
+    ind = np.arange(N)    # the x locations for the groups
+    width = 0.35         # the width of the bars
+    p1 = ax.bar(ind, tuple(train), width, color='lightsteelblue')
+
+    p2 = ax.bar(ind + width, tuple(test), width, color='c')
+
+    ax.set_title('Model Performance with High School Graudation Output Label')
+    ax.set_xticks(ind + width / 2)
+    ax.set_xticklabels(tuple(model_list))
+    ax.tick_params(axis='both', which='major', labelsize=10)
+    ax.tick_params(axis='both', which='minor', labelsize=8)
+
+    ax.legend((p1[0], p2[0]), ('Train', 'Test'))
+    ax.autoscale_view()
+
+    plt.show()
+
+    return
 
     #
     # test_score = np.zeros((n_estimators,), dtype=np.float64)
@@ -176,7 +206,7 @@ class Model(object):
             self.model = discriminant_analysis.QuadraticDiscriminantAnalysis()
         elif type == "lda":
             self.model = discriminant_analysis.LinearDiscriminantAnalysis()
-        elif type == 'full':
+        elif type == 'XGBoost with Bagging':
             self.model = ensemble.BaggingRegressor(base_estimator=ensemble.GradientBoostingRegressor())
 
 
