@@ -7,6 +7,7 @@ from sklearn import linear_model
 from sklearn import svm
 from sklearn import ensemble
 from sklearn import discriminant_analysis
+from sklearn import gaussian_process
 import matplotlib.pyplot as plt
 NUM_TRIALS = 100
 
@@ -33,7 +34,7 @@ def main():
     # print('Average Testng Score: ' + str(avg_score_test))
 
 
-    model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging']
+    model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging', "Gaussian Process"]
 
     n_estimators=100
     subsample=1.0
@@ -71,7 +72,8 @@ def main():
     ax.set_xticks(ind + width / 2)
     ax.set_xticklabels(tuple(model_list))
     ax.tick_params(axis='both', which='major', labelsize=10)
-    ax.tick_params(axis='both', which='minor', labelsize=8)
+    ax.tick_params(axis='both', which='minor', labelsize=6)
+    ax.set_ylabel('R^2')
 
     ax.legend((p1[0], p2[0]), ('Train', 'Test'))
     ax.autoscale_view()
@@ -208,6 +210,8 @@ class Model(object):
             self.model = discriminant_analysis.LinearDiscriminantAnalysis()
         elif type == 'XGBoost with Bagging':
             self.model = ensemble.BaggingRegressor(base_estimator=ensemble.GradientBoostingRegressor())
+        elif type == "Gaussian Process":
+            self.model = gaussian_process.GaussianProcessRegressor()
 
 
     def _transform_data(self, dataframe_x, dataframe_y, train_split = 0.8):
@@ -262,11 +266,11 @@ class Model(object):
 
         return score_train, score_test
 
-	def predict(self, data, data_key = 'highschool', noisy = False):
-		data_x = data['%s_x'%data_key]
-		data_y = data['%s_y'%data_key]
-		x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
-		return self.model.predict(x_test)
+    def predict(self, data, data_key = 'highschool', noisy = False):
+        data_x = data['%s_x'%data_key]
+        data_y = data['%s_y'%data_key]
+        x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
+        return self.model.predict(x_test)
 
 
 
