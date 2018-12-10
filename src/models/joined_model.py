@@ -2,7 +2,7 @@ import sys, os
 sys.path.append('./../data_processing/')
 from dataprocess import *
 from sklearn import linear_model
-from sklearn import svm 
+from sklearn import svm
 NUM_TRIALS = 1000
 
 def main():
@@ -57,6 +57,9 @@ class JoinedModel(object):
 
 	def _transform_data(self, dataframe_x, dataframe_intermediate, dataframe_y, train_split = 0.8):
 		m,n = dataframe_x.shape
+		print(dataframe_x)
+		print(dataframe_y)
+		print(dataframe_intermediate)
 
 		x = np.array(dataframe_x)
 		y = np.array(dataframe_y)
