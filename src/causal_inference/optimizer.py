@@ -37,7 +37,7 @@ def optimize(data, model, penalty = 1.0, learning_rate = 0.01):
         print(data['highschool_x'].shape, predictions.shape)
         weighted_res = np.array(data['highschool_x']['Number of Students']).dot(predictions)
         print(weighted_res)
-
+#
     compute_objective(data, model)
 
 
