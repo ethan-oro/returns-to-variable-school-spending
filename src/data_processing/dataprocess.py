@@ -74,7 +74,7 @@ def transform_data(dataframe_x, dataframe_y, train_split = 0.8, standardize = Tr
 	return (x_train, y_train, x_test, y_test)
 def load_csv(filename):
 	df = pd.read_csv(filename, sep =',')
-	return df 
+	return df
 
 
 
@@ -84,11 +84,11 @@ def school_process(school_data, zip_data):
 
 	'''
 	school_categories = {
-		'descriptive': ['School Code', 
-						'School Name', 
-						'Town', 
-						'State', 
-						'Zip', 
+		'descriptive': ['School Code',
+						'School Name',
+						'Town',
+						'State',
+						'Zip',
 						'District Name',
 						'District Code'],
 		'enrollment_by_grade': [
@@ -126,6 +126,10 @@ def school_process(school_data, zip_data):
 			'Number of Students'
 		],
 		'exogeneous_input': [
+			'Total Expenditures',
+			'Average Expenditures per Pupil'
+		],
+		'exogeneous_input1': [
 			'Total # of Classes',
 			'Average Class Size',
 			'Salary Totals',
@@ -137,7 +141,7 @@ def school_process(school_data, zip_data):
 			'Average Expenditures per Pupil'
 		],
 		'output_markers': [
-			'District_Progress and Performance Index (PPI) - All Students'
+			'% Graduated'
 		]
 	}
 
@@ -160,7 +164,7 @@ def school_process(school_data, zip_data):
 	]
 	aux_morn = [
 		'12am to 5am',
-		'5am to 530am', 
+		'5am to 530am',
 		'530 am to 6am',
 		'6am to 630am',
 		'630 am to 7am',
@@ -173,7 +177,7 @@ def school_process(school_data, zip_data):
 		'4pm to midnight'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + school_categories['output_markers']
+	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input'] 
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
 	school_data = school_data.dropna()
@@ -192,20 +196,20 @@ def school_process(school_data, zip_data):
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
-	
+
 	## Normalization of numeric columns -- future work?##
 
-	
+
 	## Filter by school type -- bugs ##
 	highschools = joined['12_Enrollment'] > 0
 	middleschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] > 0)
 	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
-	
+
 	## Filter the input and output columns
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories # + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
 
-	output = joined['District_Progress and Performance Index (PPI) - All Students']
+	output = joined['% Graduated']
 
 	data_dict = {
 		'full_x': full_x,
@@ -226,11 +230,11 @@ def spending_process(school_data, zip_data):
 
 	'''
 	school_categories = {
-		'descriptive': ['School Code', 
-						'School Name', 
-						'Town', 
-						'State', 
-						'Zip', 
+		'descriptive': ['School Code',
+						'School Name',
+						'Town',
+						'State',
+						'Zip',
 						'District Name',
 						'District Code'],
 		'enrollment_by_grade': [
@@ -311,7 +315,7 @@ def spending_process(school_data, zip_data):
 	]
 	aux_morn = [
 		'12am to 5am',
-		'5am to 530am', 
+		'5am to 530am',
 		'530 am to 6am',
 		'6am to 630am',
 		'630 am to 7am',
@@ -341,17 +345,17 @@ def spending_process(school_data, zip_data):
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
-	
+
 	## Normalization of numeric columns -- future work?##
 
-	
+
 	## Filter by school type -- bugs ##
 	highschools = joined['12_Enrollment'] > 0
 	middleschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] > 0)
 	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
-	
+
 	## Filter the input and output columns
-	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories 
+	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories
 	full_x = joined[x_cols]
 
 	output = joined[output_categories]
@@ -375,11 +379,11 @@ def full_process(school_data, zip_data):
 
 	'''
 	school_categories = {
-		'descriptive': ['School Code', 
-						'School Name', 
-						'Town', 
-						'State', 
-						'Zip', 
+		'descriptive': ['School Code',
+						'School Name',
+						'Town',
+						'State',
+						'Zip',
 						'District Name',
 						'District Code'],
 		'enrollment_by_grade': [
@@ -456,7 +460,7 @@ def full_process(school_data, zip_data):
 
 	aux_morn = [
 		'12am to 5am',
-		'5am to 530am', 
+		'5am to 530am',
 		'530 am to 6am',
 		'6am to 630am',
 		'630 am to 7am',
@@ -486,15 +490,15 @@ def full_process(school_data, zip_data):
 	zip_data = zip_data.rename(columns={'Place':'Zip Code'})
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
-	
+
 	## Normalization of numeric columns -- future work?##
 
-	
+
 	## Filter by school type -- bugs ##
 	highschools = joined['12_Enrollment'] > 0
 	middleschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] > 0)
 	elementaryschools = (joined['12_Enrollment'] == 0) & (joined['7_Enrollment'] == 0)
-	
+
 	## Filter the input and output columns
 	always_x_cols = school_categories['endogeneous_input'] + zip_categories
 	always_x = joined[always_x_cols]
