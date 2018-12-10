@@ -21,10 +21,13 @@ def main():
     for output_metric in output_metrics:
         print('Running metric', output_metric)
         data = grab_data(output_metric)
-        model = Model(type="XGBoost with Bagging", regularization=False)
-        print(model.train(data))
+        model = Model(type="linear_regression", regularization=False)
+        errors = model.train(data)
+        print (errors)
         for variator in variators:
             sampled_predictions = predict_many(data, model, variator, 50, 0.001)
+            # plot_some(sampled_predictions)
+            # break
             predictions[variator][output_metric] = sampled_predictions
 
     
@@ -72,7 +75,7 @@ def plot_all(predictions, school_ind = 100):
     plt.show()
 
 def plot_some(predictions, rows=3, cols=3):
-    amnts_changed = predictions.keys()
+    amnts_changed = list(predictions.keys())
 
     choices = np.random.choice(len(predictions[amnts_changed[0]]), rows * cols, replace=False)
 
