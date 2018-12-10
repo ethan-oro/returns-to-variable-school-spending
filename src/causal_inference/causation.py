@@ -4,8 +4,9 @@ sys.path.append('./../models/')
 from dataprocess import *
 from models import *
 from sklearn import linear_model
-from sklearn import svm 
+from sklearn import svm
 import matplotlib.pyplot as plt
+import copy
 
 def main():
     # data = grab_data()
@@ -21,13 +22,13 @@ def main():
     for output_metric in output_metrics:
         print('Running metric', output_metric)
         data = grab_data(output_metric)
-        model = Model(type="XGBoost with Bagging", regularization=False)
+        model = Model(type="linear_regression", regularization=True)
         print(model.train(data))
         for variator in variators:
             sampled_predictions = predict_many(data, model, variator, 50, 0.001)
             predictions[variator][output_metric] = sampled_predictions
 
-    
+
     plot_all(predictions)
 
     find_avg_slope(predictions)
@@ -47,9 +48,21 @@ def find_avg_slope(predictions):
 
 def predict_many(data, model, variator, num_steps, step_size):
     predictions = {}
-    current_var = data['highschool_x'][variator]
+    df = copy.deepcopy(data['highschool_x'])
+    current_var = copy.deepcopy(df[variator])
     for change in [1 + step_size * i for i in range(-num_steps, num_steps + 1)]:
-        data['highschool_x'][variator] = change * current_var
+        print (change)
+        new_var = copy.deepcopy(current_var)
+        for k, v in new_var.items():
+            new_var[k] = v * change
+        list1 = new_var.tolist()
+        list2 = current_var.tolist()
+        if (change != 1.0):
+            for i in range(len(list1)):
+                if (list1[i] == list2[i]):
+                    print ('error', i, list1[i], list2[i])
+        df.update(new_var)
+        data['highschool_x'] = df
         predictions[change] = model.predict(data)
 
     return predictions

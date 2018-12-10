@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 NUM_TRIALS = 100
 
 def main():
-    model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging', "Gaussian Process"]
+    model_list = [ "linear", 'ridge', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging', "Gaussian Process"]
 
     n_estimators=100
     subsample=1.0
@@ -78,10 +78,9 @@ def multiple_splits(model, data, noisy = False):
 class Model(object):
     def __init__(self, type = "linear_regression", regularization = False, n_estimators = 100, subsample = 1.0):
         if type == "linear_regression":
-            if regularization:
-                self.model = linear_model.Ridge()
-            else:
-                self.model = linear_model.LinearRegression(normalize=True)
+            self.model = linear_model.LinearRegression(normalize=True)
+        elif type == "ridge":
+            self.model = linear_model.Ridge()
         elif type == "SVM":
             self.model = svm.SVR()
         elif type == 'XGBoost':
