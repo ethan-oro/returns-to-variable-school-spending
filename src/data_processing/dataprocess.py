@@ -141,7 +141,9 @@ def school_process(school_data, zip_data):
 			'Average Expenditures per Pupil'
 		],
 		'output_markers': [
-			'% Graduated'
+			'Average SAT_Reading',
+            'Average SAT_Writing',
+            'Average SAT_Math'
 		]
 	}
 
@@ -177,11 +179,14 @@ def school_process(school_data, zip_data):
 		'4pm to midnight'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input'] 
+
+	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input']
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
+	school_data['Average SAT_Reading'] = school_data['Average SAT_Reading'] + school_data['Average SAT_Writing'] + school_data['Average SAT_Math']
+	school_data = school_data.rename(columns={'Average SAT_Reading': 'Composite SAT'})
 	school_data = school_data.dropna()
-	## Create Dummy Variables for School Type ##
+    ## Create Dummy Variables for School Type ##
 	# one_hot_type = pd.get_dummies(school_data['School Type'])
 	# school_data = school_data.join(one_hot_type)
 	# school_data.drop('School Type', axis=1, inplace=True)
@@ -209,7 +214,8 @@ def school_process(school_data, zip_data):
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories # + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
 
-	output = joined['% Graduated']
+	print(school_data['Composite SAT'])
+	output = school_data['Composite SAT']
 
 	data_dict = {
 		'full_x': full_x,
@@ -346,8 +352,7 @@ def spending_process(school_data, zip_data):
 	## Join the zip code data with the school data ##
 	joined = school_data.set_index('Zip Code').join(zip_data.set_index('Zip Code'), how='left', rsuffix='_scrape')
 
-	## Normalization of numeric columns -- future work?##
-
+	## Normalization of numeric columns -- future work?##    
 
 	## Filter by school type -- bugs ##
 	highschools = joined['12_Enrollment'] > 0
