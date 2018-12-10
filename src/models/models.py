@@ -1,6 +1,6 @@
 import sys, os
-import plotly.plotly as py
-import plotly.graph_objs as go
+# import plotly.plotly as py
+# import plotly.graph_objs as go
 sys.path.append('./../data_processing/')
 from dataprocess import *
 from sklearn import linear_model
@@ -165,11 +165,11 @@ class Model(object):
 
         return score_train, score_test
 
-    def predict(self, data, data_key = 'highschool', noisy = False):
+    def predict(self, data, data_key = 'highschool'):
         data_x = data['%s_x'%data_key]
         data_y = data['%s_y'%data_key]
-        x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
-        return self.model.predict(x_test)
+        x, y = self._transform_data_pred(data_x, data_y)
+        return self.model.predict(x)
 
 
 
@@ -249,35 +249,35 @@ def tuning():
 
 
 
-def old_plotting():
-    test_score = np.zeros((n_estimators,), dtype=np.float64)
+# def old_plotting():
+#     test_score = np.zeros((n_estimators,), dtype=np.float64)
 
-    clf = perform_model.model
-    for i, y_pred in enumerate(clf.staged_predict(perform_model.x_test)):
-        test_score[i] = clf.loss_(perform_model.y_test, y_pred)
+#     clf = perform_model.model
+#     for i, y_pred in enumerate(clf.staged_predict(perform_model.x_test)):
+#         test_score[i] = clf.loss_(perform_model.y_test, y_pred)
 
 
-    train = go.Scatter(x=np.arange(n_estimators) + 1,
-                       y=clf.train_score_,
-                       name='Training Set Deviance',
-                       mode='lines',
-                       line=dict(color='blue')
-                      )
-    test = go.Scatter(x=np.arange(n_estimators) + 1,
-                      y=test_score,
-                      mode='lines',
-                      name='Test Set Deviance',
-                      line=dict(color='red')
-                     )
+#     train = go.Scatter(x=np.arange(n_estimators) + 1,
+#                        y=clf.train_score_,
+#                        name='Training Set Deviance',
+#                        mode='lines',
+#                        line=dict(color='blue')
+#                       )
+#     test = go.Scatter(x=np.arange(n_estimators) + 1,
+#                       y=test_score,
+#                       mode='lines',
+#                       name='Test Set Deviance',
+#                       line=dict(color='red')
+#                      )
 
-    layout = go.Layout(title='Deviance',
-                       xaxis=dict(title='Boosting Iterations'),
-                       yaxis=dict(title='Deviance')
-                      )
-    fig = go.Figure(data=[test, train], layout=layout)
-    pio.write_image(fig, 'fig1.png')
+#     layout = go.Layout(title='Deviance',
+#                        xaxis=dict(title='Boosting Iterations'),
+#                        yaxis=dict(title='Deviance')
+#                       )
+#     fig = go.Figure(data=[test, train], layout=layout)
+#     pio.write_image(fig, 'fig1.png')
 
-    print('finished plotting')
+#     print('finished plotting')
 
 
 

@@ -24,10 +24,10 @@ def main():
 	school_process(school_data, scraped_data)
 	## want a dictionary of index to school code
 
-def grab_data():
+def grab_data(output_metric = '% Graduated'):
 	school_data = load_csv('../../data/massachusetts-public-schools-data/MA_Public_Schools_2017.csv')
 	scraped_data = load_csv('../../scraper/econ_full_scrape_11-17-2018.csv')
-	return school_process(school_data, scraped_data)
+	return school_process(school_data, scraped_data, output_metric)
 
 def grab_data_spend():
 	school_data = load_csv('../../data/massachusetts-public-schools-data/MA_Public_Schools_2017.csv')
@@ -78,7 +78,7 @@ def load_csv(filename):
 
 
 
-def school_process(school_data, zip_data):
+def school_process(school_data, zip_data, output_metric = '% Graduated'):
 	'''
 	A. Split into elementary, middle, high schools
 
@@ -125,23 +125,29 @@ def school_process(school_data, zip_data):
 			'% Females',
 			'Number of Students'
 		],
+		# 'exogeneous_input': [
+		# 	'Total Expenditures',
+		# 	'Average Expenditures per Pupil'
+		# ],
 		'exogeneous_input': [
-			'Total Expenditures',
-			'Average Expenditures per Pupil'
-		],
-		'exogeneous_input1': [
-			'Total # of Classes',
+			# 'Total # of Classes',
 			'Average Class Size',
-			'Salary Totals',
+			# 'Salary Totals',
 			'Average Salary',
 			'FTE Count',
 			'Total In-district FTEs',
-			'Total Expenditures',
+			# 'Total Expenditures',
 			'Total Pupil FTEs',
 			'Average Expenditures per Pupil'
 		],
 		'output_markers': [
-			'% Graduated'
+			'% Graduated',
+			'% Attending College',
+			'MCAS_10thGrade_Math_CPI',
+			'MCAS_10thGrade_English_CPI',
+			'Average SAT_Reading',
+			'Average SAT_Writing',
+			'Average SAT_Math'
 		]
 	}
 
@@ -209,7 +215,13 @@ def school_process(school_data, zip_data):
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories # + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
 
-	output = joined['% Graduated']
+	# output = joined['% Graduated']
+	if output_metric == 'Composite MCAS CPI':
+		joined['Composite MCAS CPI'] = joined['MCAS_10thGrade_Math_CPI'] + joined['MCAS_10thGrade_English_CPI']
+	elif output_metric == 'Composite SAT':
+		joined['Composite SAT'] = joined['Average SAT_Reading'] + joined['Average SAT_Writing'] + joined['Average SAT_Math']
+
+	output = joined[output_metric]
 
 	data_dict = {
 		'full_x': full_x,
