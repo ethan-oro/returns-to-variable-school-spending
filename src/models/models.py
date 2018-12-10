@@ -12,28 +12,6 @@ import matplotlib.pyplot as plt
 NUM_TRIALS = 100
 
 def main():
-    # print('-- PART I --')
-    # data_first = grab_data_spend()
-    # for key in data_first['full_y'].keys():
-    #     print(key)
-    #     spend_model = Model(type="XGBoost", regularization = False)
-    #
-    #     data_first = grab_data_spend()
-    #     data_new = data_first
-    #     data_new['full_y'] = data_first['full_y'][key]
-    #
-    #     avg_score_train, avg_score_test = multiple_splits(spend_model, data_new)
-    #     print('Average Training Score: ' + str(avg_score_train))
-    #     print('Average Testng Score: ' + str(avg_score_test))
-
-    # perform_model = Model(type='full')
-    # data_second = grab_data()
-    # avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-    # print('-- RESULTS --')
-    # print('Average Training Score: ' + str(avg_score_train))
-    # print('Average Testng Score: ' + str(avg_score_test))
-
-
     model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging', "Gaussian Process"]
 
     n_estimators=100
@@ -79,92 +57,6 @@ def main():
     ax.autoscale_view()
 
     plt.show()
-
-    return
-
-    #
-    # test_score = np.zeros((n_estimators,), dtype=np.float64)
-    #
-    # clf = perform_model.model
-    # for i, y_pred in enumerate(clf.staged_predict(perform_model.x_test)):
-    #     test_score[i] = clf.loss_(perform_model.y_test, y_pred)
-    #
-    #
-    # train = go.Scatter(x=np.arange(n_estimators) + 1,
-    #                    y=clf.train_score_,
-    #                    name='Training Set Deviance',
-    #                    mode='lines',
-    #                    line=dict(color='blue')
-    #                   )
-    # test = go.Scatter(x=np.arange(n_estimators) + 1,
-    #                   y=test_score,
-    #                   mode='lines',
-    #                   name='Test Set Deviance',
-    #                   line=dict(color='red')
-    #                  )
-    #
-    # layout = go.Layout(title='Deviance',
-    #                    xaxis=dict(title='Boosting Iterations'),
-    #                    yaxis=dict(title='Deviance')
-    #                   )
-    # fig = go.Figure(data=[test, train], layout=layout)
-    # pio.write_image(fig, 'fig1.png')
-    #
-    # print('finished plotting')
-    #
-    #
-    #
-    #
-    # numIters = 20
-    # n_estimators=100
-    # subsample=1.0
-    # params = []
-    # for iter in range(0, numIters):
-    #     perform_model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
-    #     data_second = grab_data()
-    #     avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-    #     # print(perform_model.model.estimators_.shape)
-    #     # tree = perform_model.model.estimators_[0, 0].tree_
-    #     # leaf_mask = tree.children_left == -1
-    #     # w_i = tree.value[leaf_mask, 0, 0]
-    #     params.append(perform_model.model.estimators_)
-    #     print (perform_model.model.estimators_.shape)
-    #     print (type(perform_model.model.estimators_))
-    #     print (type(perform_model.model.estimators_[0, 0].tree_))
-    #
-    # # estimators = []
-    # # for param in params:
-    #
-    # model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
-    # # model.set_params()
-    # sum_score_train = 0
-    # sum_score_test = 0
-    # for i in range(NUM_TRIALS):
-    #     score_train, score_test = model.train(data)
-    #     sum_score_train += score_train
-    #     sum_score_test += score_test
-    #     if noisy:
-    #         print('---')
-    #         print(score_train)
-    #         print(score_test)
-    # avg_score_train = sum_score_train / NUM_TRIALS
-    # avg_score_test = sum_score_test / NUM_TRIALS
-    #
-    # print('-- RESULTS --')
-    # print('Average Training Score: ' + str(avg_score_train))
-    # print('Average Testng Score: ' + str(avg_score_test))
-    #
-    #
-    #
-    # for n_estimators in range(60, 100, 10):
-    #     for subsample in [0.6, 0.7, 0.8, 0.9, 1.0]:
-    #         perform_model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
-    #         data_second = grab_data()
-    #
-    #         avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-    #         print('-- ', models[0] , ': n_estimators: ', n_estimators, '; subsample: ',subsample, ' --')
-    #         print('Average Training Score: ' + str(avg_score_train))
-    #         print('Average Testng Score: ' + str(avg_score_test))
 
 
 def multiple_splits(model, data, noisy = False):
@@ -272,6 +164,113 @@ class Model(object):
         x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
         return self.model.predict(x_test)
 
+
+
+def old_spend():
+    print('-- PART I --')
+    data_first = grab_data_spend()
+    for key in data_first['full_y'].keys():
+        print(key)
+        spend_model = Model(type="XGBoost", regularization = False)
+
+        data_first = grab_data_spend()
+        data_new = data_first
+        data_new['full_y'] = data_first['full_y'][key]
+
+        avg_score_train, avg_score_test = multiple_splits(spend_model, data_new)
+        print('Average Training Score: ' + str(avg_score_train))
+        print('Average Testng Score: ' + str(avg_score_test))
+
+    perform_model = Model(type='full')
+    data_second = grab_data()
+    avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+    print('-- RESULTS --')
+    print('Average Training Score: ' + str(avg_score_train))
+    print('Average Testng Score: ' + str(avg_score_test))
+
+def tuning():
+    numIters = 20
+    n_estimators=100
+    subsample=1.0
+    params = []
+    for iter in range(0, numIters):
+        perform_model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
+        data_second = grab_data()
+        avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+        # print(perform_model.model.estimators_.shape)
+        # tree = perform_model.model.estimators_[0, 0].tree_
+        # leaf_mask = tree.children_left == -1
+        # w_i = tree.value[leaf_mask, 0, 0]
+        params.append(perform_model.model.estimators_)
+        print (perform_model.model.estimators_.shape)
+        print (type(perform_model.model.estimators_))
+        print (type(perform_model.model.estimators_[0, 0].tree_))
+
+    # estimators = []
+    # for param in params:
+
+    model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
+    # model.set_params()
+    sum_score_train = 0
+    sum_score_test = 0
+    for i in range(NUM_TRIALS):
+        score_train, score_test = model.train(data)
+        sum_score_train += score_train
+        sum_score_test += score_test
+        if noisy:
+            print('---')
+            print(score_train)
+            print(score_test)
+    avg_score_train = sum_score_train / NUM_TRIALS
+    avg_score_test = sum_score_test / NUM_TRIALS
+
+    print('-- RESULTS --')
+    print('Average Training Score: ' + str(avg_score_train))
+    print('Average Testng Score: ' + str(avg_score_test))
+
+
+
+    for n_estimators in range(60, 100, 10):
+        for subsample in [0.6, 0.7, 0.8, 0.9, 1.0]:
+            perform_model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
+            data_second = grab_data()
+
+            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+            print('-- ', models[0] , ': n_estimators: ', n_estimators, '; subsample: ',subsample, ' --')
+            print('Average Training Score: ' + str(avg_score_train))
+            print('Average Testng Score: ' + str(avg_score_test))
+
+
+
+def old_plotting():
+    test_score = np.zeros((n_estimators,), dtype=np.float64)
+
+    clf = perform_model.model
+    for i, y_pred in enumerate(clf.staged_predict(perform_model.x_test)):
+        test_score[i] = clf.loss_(perform_model.y_test, y_pred)
+
+
+    train = go.Scatter(x=np.arange(n_estimators) + 1,
+                       y=clf.train_score_,
+                       name='Training Set Deviance',
+                       mode='lines',
+                       line=dict(color='blue')
+                      )
+    test = go.Scatter(x=np.arange(n_estimators) + 1,
+                      y=test_score,
+                      mode='lines',
+                      name='Test Set Deviance',
+                      line=dict(color='red')
+                     )
+
+    layout = go.Layout(title='Deviance',
+                       xaxis=dict(title='Boosting Iterations'),
+                       yaxis=dict(title='Deviance')
+                      )
+    fig = go.Figure(data=[test, train], layout=layout)
+    pio.write_image(fig, 'fig1.png')
+
+    print('finished plotting')
 
 
 
