@@ -131,15 +131,22 @@ class Model(object):
         x_train[bad_inds_train] = np.take(means, bad_inds_train[1])
         x_test[bad_inds_test] = np.take(means, bad_inds_test[1])
 
-        # std = x_train.std(axis=0)
-
-        # means = means.reshape((n,1)).T
-        # std = std.reshape((n,1)).T
-
-        # x_train = (x_train - means) / std
-        # x_test = (x_test - means) / std
-
         return (x_train, y_train, x_test, y_test)
+
+    def _transform_data_pred(self, dataframe_x, dataframe_y, train_split = 0.8):
+        m,n = dataframe_x.shape
+
+        x = np.array(dataframe_x)
+        y = np.array(dataframe_y)
+
+        means = np.nanmean(x, axis=0)
+        x = np.nan_to_num(x)
+
+        bad_inds = np.where(x == 0)
+
+        x[bad_inds] = np.take(means, bad_inds[1])
+
+        return (x, y)
 
     def train(self, data, data_key = 'highschool', noisy = False):
         # data_key is one of 'full', 'highschool', 'middleschool', 'elementary'
