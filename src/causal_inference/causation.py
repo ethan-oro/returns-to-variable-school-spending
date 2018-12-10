@@ -12,8 +12,8 @@ def main():
     model = Model(type='XGBoost with Bagging', regularization = False)
     model.train(data)
 
-    predictions = predict_many(data, model, 50, 0.001)
-    #plot_some(predictions)
+    predictions = predict_many(data, model, 50, 0.001, 400)
+    plot_some(predictions)
 
     find_avg_slope(predictions)
 
@@ -30,15 +30,23 @@ def find_avg_slope(predictions):
     print("standard deviation: ")
     print(np.std(slopes))
 
-def predict_many(data, model, to_investigate, gap):
+def predict_many(data, model, to_investigate, gap, num_iters):
     predictions = {}
 
     current_avg_exp = data['highschool_x']['Average Expenditures per Pupil']
     current_exp = data['highschool_x']['Total Expenditures']
     for change in [1 + gap * i for i in range(-to_investigate, to_investigate + 1)]:
-        data['highschool_x']['Average Expenditures per Pupil'] = change * current_avg_exp
-        data['highschool_x']['Total Expenditures'] = change * current_exp
-        predictions[change] = model.predict(data)
+        predictions[change] = 0
+
+    for _ in range(num_iters):
+        model.train(data)
+        for change in [1 + gap * i for i in range(-to_investigate, to_investigate + 1)]:
+            data['highschool_x']['Average Expenditures per Pupil'] = change * current_avg_exp
+            data['highschool_x']['Total Expenditures'] = change * current_exp
+            predictions[change] += model.predict(data)
+
+    for change in [1 + gap * i for i in range(-to_investigate, to_investigate + 1)]:
+        predictions[change] /= num_iters
 
     return predictions
 
