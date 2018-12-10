@@ -25,13 +25,16 @@ def main():
         errors = model.train(data)
         print (errors)
         for variator in variators:
-            sampled_predictions = predict_many(data, model, variator, 50, 0.001)
+            sampled_predictions = predict_many_2(data, model, variator, 50, 0.001)
             # plot_some(sampled_predictions)
             # break
             predictions[variator][output_metric] = sampled_predictions
 
     
     plot_all(predictions)
+
+    # predictions = predict_many(data, model, 50, 0.001, 400)
+    # plot_some(predictions)
 
     find_avg_slope(predictions)
 
@@ -48,12 +51,33 @@ def find_avg_slope(predictions):
     print("standard deviation: ")
     print(np.std(slopes))
 
-def predict_many(data, model, variator, num_steps, step_size):
+
+def predict_many_2(data, model, variator, num_steps, step_size):
     predictions = {}
     current_var = data['highschool_x'][variator]
     for change in [1 + step_size * i for i in range(-num_steps, num_steps + 1)]:
         data['highschool_x'][variator] = change * current_var
         predictions[change] = model.predict(data)
+
+    return predictions
+
+def predict_many(data, model, to_investigate, gap, num_iters):
+    predictions = {}
+
+    current_avg_exp = data['highschool_x']['Average Expenditures per Pupil']
+    current_exp = data['highschool_x']['Total Expenditures']
+    for change in [1 + gap * i for i in range(-to_investigate, to_investigate + 1)]:
+        predictions[change] = 0
+
+    for _ in range(num_iters):
+        model.train(data)
+        for change in [1 + gap * i for i in range(-to_investigate, to_investigate + 1)]:
+            data['highschool_x']['Average Expenditures per Pupil'] = change * current_avg_exp
+            data['highschool_x']['Total Expenditures'] = change * current_exp
+            predictions[change] += model.predict(data)
+
+    for change in [1 + gap * i for i in range(-to_investigate, to_investigate + 1)]:
+        predictions[change] /= num_iters
 
     return predictions
 
