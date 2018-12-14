@@ -2,7 +2,7 @@
 
 CS229 Autumn 2018 Final Project
 
-Authors: Isaac Kasevich (isaack97), Zane Kashner (zkashner) and Ethan Oro (eoro)
+Authors: Isaac Kasevich (isaack97@stanford.edu), Zane Kashner (zkashner@stanford.edu) and Ethan Oro (eoro@stanford.edu)
 
 ## Abstract
 

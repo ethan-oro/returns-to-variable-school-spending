@@ -15,104 +15,16 @@ from sklearn.preprocessing import StandardScaler
 NUM_TRIALS = 100
 
 def main():
-    output_metrics = ['Composite MCAS CPI', 'Composite SAT', '% Graduated', '% Attending College']
-    for metric in output_metrics:
-        perform_model = Model(type='XGBoost with Bagging', n_estimators=12)
-        data_second = grab_data(metric)
-
-        avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-        print('-- ', "AdaBoostRegressor : ", metric, ' --')
-        print('Average Training Score: ' + str(avg_score_train))
-        print('Average Testng Score: ' + str(avg_score_test))
-
-    # tuning("XGBoost with Bagging")
-
-def run_all():
-    model_list = [ "linear_regression", 'ridge', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging']
-    # model_list = ['linear_regression']
-    output_metrics = ['Composite MCAS CPI', 'Composite SAT', '% Graduated', '% Attending College']
-    # output_metrics= ['Composite MCAS CPI']
-
-    n_estimators=100
-    subsample=1.0
-    for metric in output_metrics:
-        results = collections.defaultdict(tuple)
-        for model in model_list:
-            print ('running ', model, '...')
-            perform_model = Model(type=model, n_estimators=n_estimators, subsample=subsample)
-            data_second = grab_data(metric)
-            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-            results[model] = (avg_score_train, avg_score_test)
-        for name, result in results.items():
-            print('-- ', name ,' --')
-            print('Average Training Score: ' + str(result[0]))
-            print('Average Testng Score: ' + str(result[1]))
-
-
-        N = len(model_list)
-
-        train = []
-        test = []
-
-        for name, result in results.items():
-            train.append(result[0])
-            test.append(result[1])
-
-        fig, ax = plt.subplots()
-
-        ind = np.arange(N)    # the x locations for the groups
-        width = 0.35         # the width of the bars
-        p1 = ax.bar(ind, tuple(train), width, color='lightsteelblue')
-        p2 = ax.bar(ind + width, tuple(test), width, color='c')
-
-        ax.set_title('Model Performance with {} Output Label'.format(metric), fontsize = 10)
-        ax.set_xticks(ind + width / 2)
-        ax.set_xticklabels(tuple(model_list))
-        ax.tick_params(axis='both', which='major', labelsize=8)
-        ax.tick_params(axis='both', which='minor', labelsize=8)
-        ax.set_ylabel('R^2', fontsize=8)
-
-
-        def add_label(rects):
-            for rect in rects:
-                height = rect.get_height()
-                ax.text(rect.get_x() + rect.get_width() / 2, 1.005*height, '{0:.2f}'.format(float(height)), ha='center', va='bottom')
-
-
-        add_label(p1)
-        add_label(p2)
-
-        ax.legend((p1[0], p2[0]), ('Train', 'Test'))
-        ax.autoscale_view()
-
-        plt.show()
-
-
-def multiple_splits(model, data, noisy = False):
-    sum_score_train = 0
-    sum_score_test = 0
-    for i in range(NUM_TRIALS):
-        score_train, score_test = model.train(data)
-        sum_score_train += score_train
-        sum_score_test += score_test
-        if noisy:
-            print('---')
-            print(score_train)
-            print(score_test)
-    avg_score_train = sum_score_train / NUM_TRIALS
-    avg_score_test = sum_score_test / NUM_TRIALS
-
-    return avg_score_train, avg_score_test
-
+    pass
 
 class Model(object):
-    def __init__(self, type = "linear_regression", regularization = False, n_estimators = 100, subsample = 1.0, max_depth=3):
+    def __init__(self, type = "linear_regression", regularization = False, n_estimators = 100, subsample = 1.0, max_depth=3, c=80, e=0.001):
         if type == "linear_regression":
             self.model = linear_model.LinearRegression(normalize=True)
         elif type == "ridge":
             self.model = linear_model.Ridge()
         elif type == "SVM":
-            self.model = svm.SVR()
+            self.model = svm.SVR(kernel='rbf', gamma='auto', C=c, epsilon=e)
         elif type == 'XGBoost':
             self.model = ensemble.GradientBoostingRegressor(n_estimators=n_estimators, subsample=subsample, max_depth=max_depth)
         elif type == 'BaggingRegressor':
@@ -339,18 +251,95 @@ def tuning(model):
 
 
 
-    for n_estimators in range(12, 18, 2):
-        # for subsample in [0.6, 0.7, 0.8, 0.9, 1.0]:
+    for c in range(1, 100, 10):
+        for e in [0.001, 0.01, 0.1, 0.3]:
         # for max_depth in [1, 2, 3, 4, 5]:
 
-        perform_model = Model(type='XGBoost with Bagging', n_estimators=n_estimators, )
-        data_second = grab_data()
+            perform_model = Model(type='SVM', c=c, e=e)
+            data_second = grab_data()
 
-        avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-        print('-- ', model , ': n_estimators: ', n_estimators, '; ', ' --')
-        print('Average Training Score: ' + str(avg_score_train))
-        print('Average Testng Score: ' + str(avg_score_test))
+            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+            print('-- ', model , ': n_estimators: ', c, 'c; ', e , 'e --')
+            print('Average Training Score: ' + str(avg_score_train))
+            print('Average Testng Score: ' + str(avg_score_test))
 
+
+def run_all():
+    model_list = [ "linear_regression", 'ridge', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging']
+    # model_list = ['linear_regression']
+    output_metrics = ['Composite MCAS CPI', 'Composite SAT', '% Graduated', '% Attending College']
+    # output_metrics= ['Composite MCAS CPI']
+
+    n_estimators=100
+    subsample=1.0
+    for metric in output_metrics:
+        results = collections.defaultdict(tuple)
+        for model in model_list:
+            print ('running ', model, '...')
+            perform_model = Model(type=model, n_estimators=n_estimators, subsample=subsample)
+            data_second = grab_data(metric)
+            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+            results[model] = (avg_score_train, avg_score_test)
+        for name, result in results.items():
+            print('-- ', name ,' --')
+            print('Average Training Score: ' + str(result[0]))
+            print('Average Testng Score: ' + str(result[1]))
+
+
+        N = len(model_list)
+
+        train = []
+        test = []
+
+        for name, result in results.items():
+            train.append(result[0])
+            test.append(result[1])
+
+        fig, ax = plt.subplots()
+
+        ind = np.arange(N)    # the x locations for the groups
+        width = 0.35         # the width of the bars
+        p1 = ax.bar(ind, tuple(train), width, color='lightsteelblue')
+        p2 = ax.bar(ind + width, tuple(test), width, color='c')
+
+        ax.set_title('Model Performance with {} Output Label'.format(metric), fontsize = 10)
+        ax.set_xticks(ind + width / 2)
+        ax.set_xticklabels(tuple(model_list))
+        ax.tick_params(axis='both', which='major', labelsize=8)
+        ax.tick_params(axis='both', which='minor', labelsize=8)
+        ax.set_ylabel('R^2', fontsize=8)
+
+
+        def add_label(rects):
+            for rect in rects:
+                height = rect.get_height()
+                ax.text(rect.get_x() + rect.get_width() / 2, 1.005*height, '{0:.2f}'.format(float(height)), ha='center', va='bottom')
+
+
+        add_label(p1)
+        add_label(p2)
+
+        ax.legend((p1[0], p2[0]), ('Train', 'Test'))
+        ax.autoscale_view()
+
+        plt.show()
+
+
+def multiple_splits(model, data, noisy = False):
+    sum_score_train = 0
+    sum_score_test = 0
+    for i in range(NUM_TRIALS):
+        score_train, score_test = model.train(data)
+        sum_score_train += score_train
+        sum_score_test += score_test
+        if noisy:
+            print('---')
+            print(score_train)
+            print(score_test)
+    avg_score_train = sum_score_train / NUM_TRIALS
+    avg_score_test = sum_score_test / NUM_TRIALS
+
+    return avg_score_train, avg_score_test
 
 
 def multiple_splits_tune(model, data, noisy = False):
