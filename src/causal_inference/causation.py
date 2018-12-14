@@ -22,7 +22,7 @@ def main():
     for output_metric in output_metrics:
         print('Running metric', output_metric)
         data = grab_data(output_metric)
-        model = Model(type="linear_regression", regularization=True)
+        model = Model(type="ExtraTreesRegressor", n_estimators=110, max_depth = 5)
         print(model.train(data))
         for variator in variators:
             sampled_predictions = predict_many(data, model, variator, 50, 0.001)
@@ -31,27 +31,34 @@ def main():
 
     plot_all(predictions)
 
-    find_avg_slope(predictions)
+    find_avg_slope(predictions, variators)
 
-def find_avg_slope(predictions):
-    amnts_changed = predictions.keys()
-    slopes = []
-    for i in range(len(predictions[amnts_changed[0]])):
-        outputs = [predictions[change][i] for change in amnts_changed]
-        z = np.polyfit(amnts_changed, outputs, 1)
-        p = np.poly1d(z)
-        slopes.append(p.coeffs[0])
-    print("mean: ")
-    print(np.mean(slopes))
-    print("standard deviation: ")
-    print(np.std(slopes))
+def find_avg_slope(predictions, variators):
+    variators = list(predictions.keys())
+    output_vals = list(predictions[variators[0]].keys())
+    amnts_changed = list(predictions[variators[0]][output_vals[0]].keys())
+    print(variators)
+    print(amnts_changed)
+    for variator in variators:
+        for output in output_vals:
+            slopes = []
+            for i in range(len(predictions[variator][output][amnts_changed[0]])):
+                outputs = [ predictions[variator][output][change][i] for change in amnts_changed ]
+                z = np.polyfit(amnts_changed, outputs, 1)
+                p = np.poly1d(z)
+                slopes.append(p.coeffs[0])
+            print(variator)
+            print(output)
+            print("mean: ")
+            print(np.mean(slopes))
+            print("standard deviation: ")
+            print(np.std(slopes))
 
 def predict_many(data, model, variator, num_steps, step_size):
     predictions = {}
     df = copy.deepcopy(data['highschool_x'])
     current_var = copy.deepcopy(df[variator])
     for change in [1 + step_size * i for i in range(-num_steps, num_steps + 1)]:
-        print (change)
         new_var = copy.deepcopy(current_var)
         for k, v in new_var.items():
             new_var[k] = v * change
@@ -67,7 +74,7 @@ def predict_many(data, model, variator, num_steps, step_size):
 
     return predictions
 
-def plot_all(predictions, school_ind = 100):
+def plot_all(predictions, school_ind = 101):
     ncol = len(predictions[list(predictions.keys())[0]])
     fig, axs = plt.subplots(nrows=len(predictions.keys()), ncols=ncol, constrained_layout=True)
     subplots = axs.flatten()
@@ -76,7 +83,7 @@ def plot_all(predictions, school_ind = 100):
             amnts_changed = list(pred.keys())
             ax = subplots[i*ncol + j]
             outputs = [pred[change][school_ind] for change in amnts_changed]
-            ax.set_title("%s \nvs. %s"%(variator, output_metric))
+            ax.set_title("%s \nvs. %s"%(variator, output_metric), fontsize=8)
             ax.set_xlabel(variator, fontsize=7)
             ax.set_ylabel(output_metric, fontsize=7)
             plot_one(ax, amnts_changed, outputs)

@@ -130,13 +130,13 @@ def school_process(school_data, zip_data, output_metric = '% Graduated'):
 		# 	'Average Expenditures per Pupil'
 		# ],
 		'exogeneous_input': [
-			# 'Total # of Classes',
+			'Total # of Classes',
 			'Average Class Size',
-			# 'Salary Totals',
+			'Salary Totals',
 			'Average Salary',
 			'FTE Count',
 			'Total In-district FTEs',
-			# 'Total Expenditures',
+			'Total Expenditures',
 			'Total Pupil FTEs',
 			'Average Expenditures per Pupil'
 		],
@@ -183,7 +183,7 @@ def school_process(school_data, zip_data, output_metric = '% Graduated'):
 		'4pm to midnight'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input'] 
+	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input']
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
 	school_data = school_data.dropna()
@@ -222,7 +222,8 @@ def school_process(school_data, zip_data, output_metric = '% Graduated'):
 		joined['Composite SAT'] = joined['Average SAT_Reading'] + joined['Average SAT_Writing'] + joined['Average SAT_Math']
 
 	output = joined[output_metric]
-
+	print (len(full_x[highschools]))
+	print(len(highschools))
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,
@@ -372,6 +373,7 @@ def spending_process(school_data, zip_data):
 
 	output = joined[output_categories]
 
+	print (len(full_x[highschools]))
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,
