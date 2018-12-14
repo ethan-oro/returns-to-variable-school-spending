@@ -24,10 +24,10 @@ def main():
 	school_process(school_data, scraped_data)
 	## want a dictionary of index to school code
 
-def grab_data():
+def grab_data(output_metric = '% Graduated'):
 	school_data = load_csv('../../data/massachusetts-public-schools-data/MA_Public_Schools_2017.csv')
 	scraped_data = load_csv('../../scraper/econ_full_scrape_11-17-2018.csv')
-	return school_process(school_data, scraped_data)
+	return school_process(school_data, scraped_data, output_metric)
 
 def grab_data_spend():
 	school_data = load_csv('../../data/massachusetts-public-schools-data/MA_Public_Schools_2017.csv')
@@ -78,7 +78,7 @@ def load_csv(filename):
 
 
 
-def school_process(school_data, zip_data):
+def school_process(school_data, zip_data, output_metric = '% Graduated'):
 	'''
 	A. Split into elementary, middle, high schools
 
@@ -125,11 +125,11 @@ def school_process(school_data, zip_data):
 			'% Females',
 			'Number of Students'
 		],
+		# 'exogeneous_input': [
+		# 	'Total Expenditures',
+		# 	'Average Expenditures per Pupil'
+		# ],
 		'exogeneous_input': [
-			'Total Expenditures',
-			'Average Expenditures per Pupil'
-		],
-		'exogeneous_input1': [
 			'Total # of Classes',
 			'Average Class Size',
 			'Salary Totals',
@@ -141,7 +141,13 @@ def school_process(school_data, zip_data):
 			'Average Expenditures per Pupil'
 		],
 		'output_markers': [
-			'% Graduated'
+			'% Graduated',
+			'% Attending College',
+			'MCAS_10thGrade_Math_CPI',
+			'MCAS_10thGrade_English_CPI',
+			'Average SAT_Reading',
+			'Average SAT_Writing',
+			'Average SAT_Math'
 		]
 	}
 
@@ -177,7 +183,7 @@ def school_process(school_data, zip_data):
 		'4pm to midnight'
 	]
 
-	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input'] 
+	school_cols = school_categories['descriptive'] + school_categories['enrollment_by_grade'] + school_categories['endogeneous_input'] + school_categories['output_markers'] + school_categories['exogeneous_input']
 	school_data = school_data[school_cols]
 	school_data = school_data.rename(columns={'Zip':'Zip Code'})
 	school_data = school_data.dropna()
@@ -209,8 +215,15 @@ def school_process(school_data, zip_data):
 	x_cols = school_categories['endogeneous_input'] + school_categories['exogeneous_input'] + zip_categories # + ['Public School', 'Charter School']
 	full_x = joined[x_cols]
 
-	output = joined['% Graduated']
+	# output = joined['% Graduated']
+	if output_metric == 'Composite MCAS CPI':
+		joined['Composite MCAS CPI'] = joined['MCAS_10thGrade_Math_CPI'] + joined['MCAS_10thGrade_English_CPI']
+	elif output_metric == 'Composite SAT':
+		joined['Composite SAT'] = joined['Average SAT_Reading'] + joined['Average SAT_Writing'] + joined['Average SAT_Math']
 
+	output = joined[output_metric]
+	print (len(full_x[highschools]))
+	print(len(highschools))
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,
@@ -360,6 +373,7 @@ def spending_process(school_data, zip_data):
 
 	output = joined[output_categories]
 
+	print (len(full_x[highschools]))
 	data_dict = {
 		'full_x': full_x,
 		'full_y': output,

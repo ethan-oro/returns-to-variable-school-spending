@@ -9,91 +9,32 @@ from sklearn import ensemble
 from sklearn import discriminant_analysis
 from sklearn import gaussian_process
 import matplotlib.pyplot as plt
+
+from sklearn.preprocessing import StandardScaler
+
 NUM_TRIALS = 100
 
 def main():
-    model_list = [ "linear_regression", 'SVM', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging', "Gaussian Process"]
-
-    n_estimators=100
-    subsample=1.0
-
-    results = collections.defaultdict(tuple)
-    for model in model_list:
-        perform_model = Model(type=model, n_estimators=n_estimators, subsample=subsample)
-        data_second = grab_data()
-        avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-        results[model] = (avg_score_train, avg_score_test)
-    for name, result in results.items():
-        print('-- ', name ,' --')
-        print('Average Training Score: ' + str(result[0]))
-        print('Average Testng Score: ' + str(result[1]))
-
-
-    N = len(model_list)
-
-    train = []
-    test = []
-
-    for name, result in results.items():
-        train.append(result[0])
-        test.append(result[1])
-
-    fig, ax = plt.subplots()
-
-    ind = np.arange(N)    # the x locations for the groups
-    width = 0.35         # the width of the bars
-    p1 = ax.bar(ind, tuple(train), width, color='lightsteelblue')
-
-    p2 = ax.bar(ind + width, tuple(test), width, color='c')
-
-    ax.set_title('Model Performance with High School Graudation Output Label')
-    ax.set_xticks(ind + width / 2)
-    ax.set_xticklabels(tuple(model_list))
-    ax.tick_params(axis='both', which='major', labelsize=10)
-    ax.tick_params(axis='both', which='minor', labelsize=6)
-    ax.set_ylabel('R^2')
-
-    ax.legend((p1[0], p2[0]), ('Train', 'Test'))
-    ax.autoscale_view()
-
-    plt.show()
-
-
-def multiple_splits(model, data, noisy = False):
-    sum_score_train = 0
-    sum_score_test = 0
-    for i in range(NUM_TRIALS):
-        score_train, score_test = model.train(data)
-        sum_score_train += score_train
-        sum_score_test += score_test
-        if noisy:
-            print('---')
-            print(score_train)
-            print(score_test)
-    avg_score_train = sum_score_train / NUM_TRIALS
-    avg_score_test = sum_score_test / NUM_TRIALS
-
-    return avg_score_train, avg_score_test
+    pass
 
 class Model(object):
-    def __init__(self, type = "linear_regression", regularization = False, n_estimators = 100, subsample = 1.0):
+    def __init__(self, type = "linear_regression", regularization = False, n_estimators = 100, subsample = 1.0, max_depth=3, c=80, e=0.001):
         if type == "linear_regression":
-            if regularization:
-                self.model = linear_model.Ridge()
-            else:
-                self.model = linear_model.LinearRegression(normalize=True)
+            self.model = linear_model.LinearRegression(normalize=True)
+        elif type == "ridge":
+            self.model = linear_model.Ridge()
         elif type == "SVM":
-            self.model = svm.SVR()
+            self.model = svm.SVR(kernel='rbf', gamma='auto', C=c, epsilon=e)
         elif type == 'XGBoost':
-            self.model = ensemble.GradientBoostingRegressor(n_estimators=n_estimators, subsample=subsample)
+            self.model = ensemble.GradientBoostingRegressor(n_estimators=n_estimators, subsample=subsample, max_depth=max_depth)
         elif type == 'BaggingRegressor':
             self.model = ensemble.BaggingRegressor()
         elif type == 'RandomForest':
-            self.model = ensemble.RandomForestRegressor()
+            self.model = ensemble.RandomForestRegressor(n_estimators=n_estimators, max_depth=max_depth)
         elif type == "AdaBoostRegressor":
-            self.model = ensemble.AdaBoostRegressor()
+            self.model = ensemble.AdaBoostRegressor(n_estimators=n_estimators)
         elif type == 'ExtraTreesRegressor':
-            self.model = ensemble.ExtraTreesRegressor()
+            self.model = ensemble.ExtraTreesRegressor(n_estimators=n_estimators, max_depth=max_depth)
         elif type == 'Lasso':
             self.model = linear_model.Lasso()
         elif type == "qda":
@@ -101,7 +42,7 @@ class Model(object):
         elif type == "lda":
             self.model = discriminant_analysis.LinearDiscriminantAnalysis()
         elif type == 'XGBoost with Bagging':
-            self.model = ensemble.BaggingRegressor(base_estimator=ensemble.GradientBoostingRegressor())
+            self.model = ensemble.BaggingRegressor(base_estimator=ensemble.GradientBoostingRegressor(n_estimators=100, subsample=1.0, max_depth=3), n_estimators=n_estimators)
         elif type == "Gaussian Process":
             self.model = gaussian_process.GaussianProcessRegressor()
 
@@ -131,7 +72,48 @@ class Model(object):
         x_train[bad_inds_train] = np.take(means, bad_inds_train[1])
         x_test[bad_inds_test] = np.take(means, bad_inds_test[1])
 
+        # normalizer = StandardScaler()
+        # x_train = normalizer.fit_transform(x_train)
+        # x_test = normalizer.fit_transform(x_test)
+
         return (x_train, y_train, x_test, y_test)
+
+    def _transform_data_tuning(self, dataframe_x, dataframe_y, train_split = 0.8, dev_split = 0.9):
+        m,n = dataframe_x.shape
+
+        x = np.array(dataframe_x)
+        y = np.array(dataframe_y)
+        random_state = np.random.get_state()
+        np.random.shuffle(x)
+        np.random.set_state(random_state)
+        np.random.shuffle(y)
+        split_ind = int(train_split*m)
+        dev_split = int(dev_split*m)
+        x_train = x[:split_ind,:]
+        y_train = y[:split_ind]
+        x_dev = x[split_ind:,:dev_split]
+        y_dev = y[split_ind:dev_split]
+        x_test = x[dev_split:,:]
+        y_test = y[dev_split:]
+
+        means = np.nanmean(x_train, axis=0)
+        x_train = np.nan_to_num(x_train)
+        x_dev = np.nan_to_num(x_dev)
+        x_test = np.nan_to_num(x_test)
+
+        bad_inds_train = np.where(x_train == 0)
+        bad_inds_dev = np.where(x_dev == 0)
+        bad_inds_test = np.where(x_test == 0)
+
+        x_train[bad_inds_train] = np.take(means, bad_inds_train[1])
+        x_dev[bad_inds_dev] = np.take(means, bad_inds_dev[1])
+        x_test[bad_inds_test] = np.take(means, bad_inds_test[1])
+
+        # normalizer = StandardScaler()
+        # x_train = normalizer.fit_transform(x_train)
+        # x_test = normalizer.fit_transform(x_test)
+
+        return (x_train, y_train, x_dev, y_dev, x_test, y_test)
 
     def _transform_data_pred(self, dataframe_x, dataframe_y, train_split = 0.8):
         m,n = dataframe_x.shape
@@ -165,11 +147,43 @@ class Model(object):
 
         return score_train, score_test
 
-    def predict(self, data, data_key = 'highschool', noisy = False):
+    def tune(self, data, data_key = 'highschool', noisy = False):
+        # data_key is one of 'full', 'highschool', 'middleschool', 'elementary'
         data_x = data['%s_x'%data_key]
         data_y = data['%s_y'%data_key]
-        x_train, y_train, x_test, y_test = self._transform_data(data_x, data_y)
-        return self.model.predict(x_test)
+        self.x_train, self.y_train, self.x_dev, self.y_dev, self.x_test, self.y_test = self._transform_data_tuning(data_x, data_y)
+        self.model.fit(self.x_train, self.y_train)
+        if noisy:
+            print(self.model.predict(self.x_test))
+            print('--')
+            print(self.y_test)
+            print('--')
+            print(self.model.predict(self.x_test) - self.y_test)
+        score_train = self.model.score(self.x_train, self.y_train)
+        score_dev = self.model.score(self.x_dev, self.y_dev)
+
+        return score_train, score_dev
+
+    # def train(self, data, data_key = 'highschool', noisy = False):
+    #     # data_key is one of 'full', 'highschool', 'middleschool', 'elementary'
+    #     data_x = data['%s_x'%data_key]
+    #     data_y = data['%s_y'%data_key]
+    #     self.x_train, self.y_train, self.x_test, self.y_test = self._transform_data(data_x, data_y)
+    #     self.model.fit(self.x_train, self.y_train)
+    #     if noisy:
+    #         print(self.model.predict(self.x_test))
+    #         print('--')
+    #         print(self.y_test)
+    #         print('--')
+    #         print(self.model.predict(self.x_test) - self.y_test)
+    #     score_train = self.model.score(self.x_train, self.y_train)
+    #     score_test = self.model.score(self.x_test, self.y_test)
+
+    def predict(self, data, data_key = 'highschool'):
+        data_x = data['%s_x'%data_key]
+        data_y = data['%s_y'%data_key]
+        x, y, a, b = self._transform_data(data_x, data_y)
+        return self.model.predict(x)
 
 
 
@@ -195,29 +209,123 @@ def old_spend():
     print('Average Training Score: ' + str(avg_score_train))
     print('Average Testng Score: ' + str(avg_score_test))
 
-def tuning():
-    numIters = 20
-    n_estimators=100
-    subsample=1.0
-    params = []
-    for iter in range(0, numIters):
-        perform_model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
-        data_second = grab_data()
-        avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-        # print(perform_model.model.estimators_.shape)
-        # tree = perform_model.model.estimators_[0, 0].tree_
-        # leaf_mask = tree.children_left == -1
-        # w_i = tree.value[leaf_mask, 0, 0]
-        params.append(perform_model.model.estimators_)
-        print (perform_model.model.estimators_.shape)
-        print (type(perform_model.model.estimators_))
-        print (type(perform_model.model.estimators_[0, 0].tree_))
+def tuning(model):
+    # numIters = 20
+    # n_estimators=100
+    # subsample=1.0
+    # params = []
+    # for iter in range(0, numIters):
+    #     perform_model = Model(type=model, n_estimators=n_estimators, subsample=subsample)
+    #     data_second = grab_data()
+    #     avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+    #     # print(perform_model.model.estimators_.shape)
+    #     # tree = perform_model.model.estimators_[0, 0].tree_
+    #     # leaf_mask = tree.children_left == -1
+    #     # w_i = tree.value[leaf_mask, 0, 0]
+    #     params.append(perform_model.model.estimators_)
+    #     print (perform_model.model.estimators_.shape)
+    #     print (type(perform_model.model.estimators_))
+    #     print (type(perform_model.model.estimators_[0, 0].tree_))
 
     # estimators = []
     # for param in params:
+    #
+    # model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
+    # # model.set_params()
+    # sum_score_train = 0
+    # sum_score_test = 0
+    # for i in range(NUM_TRIALS):
+    #     score_train, score_test = model.train(data)
+    #     sum_score_train += score_train
+    #     sum_score_test += score_test
+    #     if noisy:
+    #         print('---')
+    #         print(score_train)
+    #         print(score_test)
+    # avg_score_train = sum_score_train / NUM_TRIALS
+    # avg_score_test = sum_score_test / NUM_TRIALS
+    #
+    # print('-- RESULTS --')
+    # print('Average Training Score: ' + str(avg_score_train))
+    # print('Average Testng Score: ' + str(avg_score_test))
 
-    model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
-    # model.set_params()
+
+
+    for c in range(1, 100, 10):
+        for e in [0.001, 0.01, 0.1, 0.3]:
+        # for max_depth in [1, 2, 3, 4, 5]:
+
+            perform_model = Model(type='SVM', c=c, e=e)
+            data_second = grab_data()
+
+            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+            print('-- ', model , ': n_estimators: ', c, 'c; ', e , 'e --')
+            print('Average Training Score: ' + str(avg_score_train))
+            print('Average Testng Score: ' + str(avg_score_test))
+
+
+def run_all():
+    model_list = [ "linear_regression", 'ridge', 'XGBoost', 'BaggingRegressor', 'RandomForest', 'Lasso', 'AdaBoostRegressor', 'ExtraTreesRegressor', 'XGBoost with Bagging']
+    # model_list = ['linear_regression']
+    output_metrics = ['Composite MCAS CPI', 'Composite SAT', '% Graduated', '% Attending College']
+    # output_metrics= ['Composite MCAS CPI']
+
+    n_estimators=100
+    subsample=1.0
+    for metric in output_metrics:
+        results = collections.defaultdict(tuple)
+        for model in model_list:
+            print ('running ', model, '...')
+            perform_model = Model(type=model, n_estimators=n_estimators, subsample=subsample)
+            data_second = grab_data(metric)
+            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
+            results[model] = (avg_score_train, avg_score_test)
+        for name, result in results.items():
+            print('-- ', name ,' --')
+            print('Average Training Score: ' + str(result[0]))
+            print('Average Testng Score: ' + str(result[1]))
+
+
+        N = len(model_list)
+
+        train = []
+        test = []
+
+        for name, result in results.items():
+            train.append(result[0])
+            test.append(result[1])
+
+        fig, ax = plt.subplots()
+
+        ind = np.arange(N)    # the x locations for the groups
+        width = 0.35         # the width of the bars
+        p1 = ax.bar(ind, tuple(train), width, color='lightsteelblue')
+        p2 = ax.bar(ind + width, tuple(test), width, color='c')
+
+        ax.set_title('Model Performance with {} Output Label'.format(metric), fontsize = 10)
+        ax.set_xticks(ind + width / 2)
+        ax.set_xticklabels(tuple(model_list))
+        ax.tick_params(axis='both', which='major', labelsize=8)
+        ax.tick_params(axis='both', which='minor', labelsize=8)
+        ax.set_ylabel('R^2', fontsize=8)
+
+
+        def add_label(rects):
+            for rect in rects:
+                height = rect.get_height()
+                ax.text(rect.get_x() + rect.get_width() / 2, 1.005*height, '{0:.2f}'.format(float(height)), ha='center', va='bottom')
+
+
+        add_label(p1)
+        add_label(p2)
+
+        ax.legend((p1[0], p2[0]), ('Train', 'Test'))
+        ax.autoscale_view()
+
+        plt.show()
+
+
+def multiple_splits(model, data, noisy = False):
     sum_score_train = 0
     sum_score_test = 0
     for i in range(NUM_TRIALS):
@@ -231,21 +339,24 @@ def tuning():
     avg_score_train = sum_score_train / NUM_TRIALS
     avg_score_test = sum_score_test / NUM_TRIALS
 
-    print('-- RESULTS --')
-    print('Average Training Score: ' + str(avg_score_train))
-    print('Average Testng Score: ' + str(avg_score_test))
+    return avg_score_train, avg_score_test
 
 
+def multiple_splits_tune(model, data, noisy = False):
+    sum_score_train = 0
+    sum_score_dev = 0
+    for i in range(NUM_TRIALS):
+        score_train, score_dev = model.tune(data)
+        sum_score_train += score_train
+        sum_score_dev += score_dev
+        if noisy:
+            print('---')
+            print(score_train)
+            print(score_dev)
+    avg_score_train = sum_score_train / NUM_TRIALS
+    avg_score_dev = sum_score_dev / NUM_TRIALS
 
-    for n_estimators in range(60, 100, 10):
-        for subsample in [0.6, 0.7, 0.8, 0.9, 1.0]:
-            perform_model = Model(type='XGBoost', n_estimators=n_estimators, subsample=subsample)
-            data_second = grab_data()
-
-            avg_score_train, avg_score_test = multiple_splits(perform_model, data_second)
-            print('-- ', models[0] , ': n_estimators: ', n_estimators, '; subsample: ',subsample, ' --')
-            print('Average Training Score: ' + str(avg_score_train))
-            print('Average Testng Score: ' + str(avg_score_test))
+    return avg_score_train, avg_score_dev
 
 
 
